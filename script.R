@@ -16,7 +16,7 @@ individuals_raw <- read_sheet('https://docs.google.com/spreadsheets/d/1Fuxwtly8B
   mutate(`rawCoord` =  str_extract(`original code`, "(?<=,).*")) %>%
   arrange(id) %>% arrange(group)
 
-
+### GROUPS
 ## Filtering for individuals with 4 grandparents from the same group only
 individuals_eligible <- individuals_raw %>%
   filter(type == 'individual',
@@ -46,7 +46,8 @@ writeLines(individuals_averages$coord,
 writeLines(individuals_averages %>% filter(n > 1) %>% pull(coord),
            paste("Armenian collection", version, "averages.txt"))
 
-## Creating regional averages
+### REGIONS
+## Creating indiviudal regional coords
 individuals_region <- individuals_raw %>%
   filter(group != 'Armenian_Yerevan') %>% # filtering out Yerevan for now
   filter(type == 'individual',
@@ -56,22 +57,30 @@ individuals_region <- individuals_raw %>%
   mutate(regionCoordSimple = paste0(region,":",group,":",id,",",rawCoord)) %>%
   arrange(id) %>% arrange(region)
 
-# Table of groups to region for reference
+# Export reference table of groups:regions 
 individuals_region %>% distinct(group, .keep_all = TRUE) %>%
   select(region, group) %>% View()
 
+# Exporting regional individuals
 writeLines(individuals_region$regionCoord,
            paste("Armenian collection", version, "region individuals.txt"))
 
+## Creating regional averages
 individuals_region_average <- individuals_region %>%
   separate(rawCoord, into = paste0("PCA_", 1:25), sep = ",", convert = TRUE, remove = FALSE) %>%
   group_by(region) %>% summarise(n = n(), across(starts_with("PCA_"), ~ round(mean(.x, na.rm = TRUE), 6)), .groups = "drop") %>%
   rowwise() %>%
-  mutate(coord = paste(paste0("Armenian_",region,"_(n=",n,")"),
+  mutate(coord_n = paste(paste0("Armenian_",region,"_(n=",n,")"),
                        paste(c_across(starts_with("PCA_")), collapse = ","),
-                       sep = ",")) %>%
+                       sep = ","),
+         coord = paste(paste0("Armenian_",region),
+                         paste(c_across(starts_with("PCA_")), collapse = ","),
+                         sep = ",")) %>%
   ungroup() %>% arrange(coord)
 
+# Exporting regional averages
 writeLines(individuals_region_average$coord,
            paste("Armenian collection", version, "region averages.txt"))
+writeLines(individuals_region_average$coord_n,
+           paste("Armenian collection", version, "region averages no n.txt"))
 
