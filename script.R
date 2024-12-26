@@ -79,8 +79,8 @@ individuals_region_average <- individuals_region %>%
   ungroup() %>% arrange(coord)
 
 # Exporting regional averages
-writeLines(individuals_region_average$coord,
-           paste("Armenian collection", version, "region averages.txt"))
 writeLines(individuals_region_average$coord_n,
+           paste("Armenian collection", version, "region averages.txt"))
+writeLines(individuals_region_average$coord,
            paste("Armenian collection", version, "region averages no n.txt"))
 
